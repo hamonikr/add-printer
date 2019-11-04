@@ -1,0 +1,81 @@
+#!/bin/bash
+
+# Add Printer Utility for HamoniKR SUN v3.0
+# 이 프로그램은 EPSON-AL-M320DN 프린터에 적합한 코드가 하드코딩 되어 있으므로
+# 다른 프린터의 경우에 정상작동하지 않을 수 있습니다.
+#
+# Devloment : Kevin Kim <root@hamonikr.org>
+# License : MIT
+
+red=`tput setaf 1`
+green=`tput setaf 2`
+reset=`tput sgr0`
+
+CONF="/etc/cups/printers.conf"
+
+# Make sure only root can run 
+if [ "$(id -u)" != "0" ]; then
+    echo -e "${red}"	
+    echo "This script must be run as root" 1>&2
+    echo -e "${reset}"	    
+    exit 1
+fi
+
+if [[ $# -eq 0 ]] ; then
+    echo "Printer Utility for HamoniKR"	
+    echo "=========================================================="	
+    echo "Usage : $0 help | <ppd file of Printer>"
+    echo ""	
+    echo "sudo $0 help : program help"		
+    echo "sudo $0 list : Show installed local pc's printers"		        
+    echo "sudo $0 <ppd file of Printer> : Add Printer"
+    exit 1
+else
+    case "$1" in
+        list ) 
+            echo "Current PC's Printer Infomation"	
+            echo -e "${green}"	                                
+            echo "=== Display printers and their devices."	    
+            sudo lpstat -s
+            echo -e "${reset}"	                            
+   
+            echo "=== Displaying available print queues"	                
+            sudo lpstat -v
+            echo -e "${reset}"	                
+            echo "=== Enabling queuing and disabling printing"	                
+            sudo lpstat -a -p
+            echo -e "${reset}"	                                        
+            echo "=== Checking print queues"	                
+            lpq            
+            echo -e "${reset}"	    
+            exit 1        
+            ;;		        
+            
+        --help|help|-h ) 
+            $0
+            ;;	
+
+        remove ) 
+            sudo rm -rf /usr/share/ppd/epson
+            sudo rm -f ${CONF}.bak
+            echo "Removed Printer Driver"	            
+            exit 1        
+            ;;		
+        *) 
+            [[ ! -d "./ppd" ]] && mkdir ppd
+            [[ ! -d "/var/spool/lpd" ]] && sudo mkdir -p /var/spool/lpd/
+            sudo usermod -aG lpadmin $USER
+            [[ ! -d "/usr/share/ppd" ]] && sudo mkdir -p /usr/share/ppd
+            [[ -d "/usr/share/ppd" ]] && sudo mkdir -p /usr/share/ppd/epson            
+            [[ ! -f "$1" ]] && echo "File does not exist"
+            sudo cp $1 /usr/share/ppd/epson/
+            [[ -f "$CONF" ]] && sudo cp ${CONF} ${CONF}.bak                        
+            # lpadmin -p myprinter -E -v ipp://myprinter.local/ipp/print -m everywhere
+            lpadmin -p Epson-AL-M320DN -E -m lsb/usr/epson/Epson-AL-M320DN_PS.ppd            
+
+            exit 1
+        ;;
+    esac
+fi
+
+exit 0

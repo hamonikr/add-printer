@@ -11,4 +11,4 @@ sudo ./add-printer <ppd파일>
 ```
 
 # 라이선스
-- MIT
+- GPL-3.0

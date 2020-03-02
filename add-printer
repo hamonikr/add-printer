@@ -55,7 +55,7 @@ else
             ;;	
 
         remove ) 
-            sudo rm -rf /usr/share/ppd/epson
+            sudo rm -rf /usr/share/ppd/*.ppd
             sudo rm -f ${CONF}.bak
             echo "Removed Printer Driver"
             exit 1
